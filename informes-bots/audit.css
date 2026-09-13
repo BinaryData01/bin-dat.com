@@ -1,0 +1,552 @@
+/* ==========================================================================
+   Binary Data — Informe de auditoría
+   audit.css
+   ========================================================================== */
+
+/* --- Reset básico --- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  background: #0f1420;
+  color: #e7e9ee;
+  line-height: 1.6;
+}
+
+/* --- Header --- */
+header {
+  padding: 30px 40px;
+  background: linear-gradient(135deg, #141a2e 0%, #182242 100%);
+  border-bottom: 4px solid #00bbfd;
+}
+
+header img {
+  display: block;
+  height: 34px;
+}
+
+header h2 {
+  margin: 8px 0 0;
+  font-size: 15px;
+  font-weight: 400;
+  color: #c9d2e8;
+}
+
+/* --- Layout general --- */
+.wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 30px 40px 60px;
+}
+
+section {
+  margin: 22px 0;
+  padding: 26px 30px;
+  background: #1a2233;
+  border: 1px solid #2a3550;
+  border-radius: 10px;
+}
+
+/* --- Tipografía / jerarquía de encabezados --- */
+h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  color: #0098d9;
+}
+
+h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  color: #0098d9;
+}
+
+h3 {
+  margin: 20px 0 8px;
+  font-size: 15px;
+  color: #8fd8ff;
+}
+
+.numb {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  margin-right: 10px;
+  border-radius: 6px;
+  background: #0098d9;
+  color: #08121f;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 26px;
+  text-align: center;
+}
+
+/* --- Tablas --- */
+table {
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid #2a3550;
+}
+
+th {
+  background: #121a2b;
+  color: #0098d9;
+  font-weight: 600;
+}
+
+td.num,
+th.num {
+  text-align: right;
+}
+
+tr:hover td {
+  background: #202c44;
+}
+
+/* --- KPIs --- */
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin: 14px 0;
+}
+
+.kpi .box {
+  padding: 16px;
+  background: #121a2b;
+  border: 1px solid #2a3550;
+  border-radius: 8px;
+}
+
+.kpi .big {
+  margin: 4px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #00bbfd;
+}
+
+.kpi .lbl {
+  font-size: 12px;
+  color: #8b9bb8;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+/* --- Hero (resultado principal) --- */
+.hero {
+  padding: 34px;
+  text-align: center;
+  background: linear-gradient(135deg, #0e1c36, #062035);
+  border: 1px solid #0098d9;
+}
+
+.hero .big {
+  font-size: 52px;
+  font-weight: 800;
+  color: #00bbfd;
+}
+
+.hero .tag {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #9fceea;
+}
+
+/* --- Barras genéricas --- */
+.bar {
+  height: 16px;
+  margin: 6px 0;
+  overflow: hidden;
+  background: #0d1422;
+  border-radius: 8px;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: #0098d9;
+}
+
+.bar2 {
+  height: 14px;
+  overflow: hidden;
+  background: #0d1422;
+  border-radius: 7px;
+}
+
+/* --- Bloques varios --- */
+.fam {
+  margin: 8px;
+  padding: 12px 16px;
+  background: #121a2b;
+  border: 1px solid #2a3550;
+  border-radius: 8px;
+}
+
+.cit {
+  font-size: 12.5px;
+  font-style: italic;
+  color: #7fa0c0;
+}
+
+code {
+  padding: 2px 6px;
+  background: #0d1422;
+  border-radius: 4px;
+  color: #ffd479;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.b-red { background: #7a1f2b; color: #ffb3bb; }
+.b-ora { background: #6b3d10; color: #ffd9a0; }
+.b-yel { background: #5b5410; color: #f3e8a0; }
+.b-grn { background: #0f4a2f; color: #a5f0c9; }
+
+/* --- Footer --- */
+footer {
+  padding: 20px;
+  color: #5c6b8a;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* --- Disclaimer --- */
+.disclaim {
+  padding: 16px 20px;
+  background: #2a2110;
+  border: 1px solid #8a6d1b;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #e6d9a8;
+}
+
+/* --- Impresión --- */
+@media print {
+  body {
+    background: #fff;
+    color: #111;
+  }
+  section {
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+  header {
+    background: #eee;
+    border-bottom: 2px solid #0098d9;
+  }
+  .kpi .box {
+    background: #f5f5f5;
+  }
+}
+
+/* ==========================================================================
+   Timeline de jornadas masivas de creación de cuentas
+   ========================================================================== */
+
+.events-container {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.2rem;
+}
+
+.event-group {
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(30, 41, 59, .6) 0%, rgba(15, 23, 42, .6) 100%);
+  border: 1px solid rgba(0, 187, 253, .3);
+  border-radius: 12px;
+}
+
+.event-group.highlight-peak {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: none;
+  }
+  50% {
+    opacity: .85;
+    box-shadow: 0 0 20px rgba(239, 68, 68, .3);
+  }
+}
+
+.event-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem;
+  align-items: start;
+  padding: 1.2rem 1.5rem;
+  background: linear-gradient(90deg, rgba(0, 187, 253, .2) 0%, rgba(0, 187, 253, .08) 100%);
+  border-bottom: 1px solid rgba(0, 187, 253, .2);
+}
+
+.event-date-range {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.event-date-range-label {
+  font-size: .8rem;
+  color: #8b9bb8;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.timeline-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-right: .5rem;
+  background: #00bbfd;
+  color: #08121f;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: .8rem;
+}
+
+.date-from-to {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #8fd8ff;
+}
+
+.event-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .2rem;
+  text-align: right;
+}
+
+.event-total-label {
+  font-size: .8rem;
+  color: #8b9bb8;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.event-total-number {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #a5f0c9;
+}
+
+.event-body {
+  padding: 1.3rem 1.5rem;
+}
+
+.days-breakdown {
+  margin-bottom: 1.2rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, .2);
+  border-radius: 8px;
+}
+
+.days-breakdown-title {
+  margin-bottom: .7rem;
+  color: #8b9bb8;
+  font-weight: 600;
+  font-size: .85rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.day-item {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: .5rem 0;
+  border-bottom: 1px solid rgba(0, 187, 253, .1);
+}
+
+.day-item:last-child {
+  border-bottom: none;
+}
+
+.day-date {
+  color: #8fd8ff;
+  font-weight: 500;
+}
+
+.day-bar-container {
+  position: relative;
+  height: 22px;
+  overflow: hidden;
+  background: rgba(0, 187, 253, .1);
+  border-radius: 4px;
+}
+
+.day-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  padding-right: 6px;
+  background: linear-gradient(90deg, #0098d9, #00bbfd);
+  border-radius: 4px;
+}
+
+.day-count {
+  color: #08121f;
+  font-weight: 600;
+  font-size: .85rem;
+}
+
+.day-count-right {
+  min-width: 64px;
+  color: #8fd8ff;
+  font-weight: 600;
+  text-align: right;
+}
+
+.event-context {
+  padding: .9rem 1rem;
+  background: rgba(0, 187, 253, .1);
+  border-left: 3px solid #00bbfd;
+  border-radius: 4px;
+  color: #cbd5e1;
+  font-size: .9rem;
+}
+
+.event-context-title {
+  margin-bottom: .4rem;
+  color: #e7e9ee;
+  font-weight: 600;
+}
+
+.event-context p {
+  margin-bottom: .6rem;
+}
+
+.event-context a {
+  color: #8fd8ff;
+  text-decoration: none;
+  border-bottom: 1px solid #8fd8ff;
+  font-size: .8rem;
+}
+
+/* ==========================================================================
+   Mobile (≤ 640px)
+   ========================================================================== */
+
+@media (max-width: 640px) {
+
+  /* --- Recuperar espacio horizontal --- */
+  header {
+    padding: 18px 16px;
+  }
+
+  .wrap {
+    padding: 18px 14px 40px;
+  }
+
+  section {
+    padding: 16px 14px;
+    margin: 14px 0;
+  }
+
+  h1 {
+    font-size: 18px;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+
+  h3 {
+    font-size: 13.5px;
+  }
+
+  /* --- Tablas: scroll horizontal propio, no de toda la página ---
+     Cada tabla se vuelve su propio contenedor con scroll,
+     así el resto del layout no se desborda. */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  th,
+  td {
+    padding: 7px 9px;
+  }
+
+  /* --- Hero: número principal más chico --- */
+  .hero {
+    padding: 22px 16px;
+  }
+
+  .hero .big {
+    font-size: 34px;
+  }
+
+  .hero .tag {
+    font-size: 12.5px;
+  }
+
+  /* --- KPIs: una sola columna --- */
+  .kpi {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- Timeline de eventos: apilar en vez de columnas fijas --- */
+  .event-header {
+    grid-template-columns: 1fr;
+    gap: .8rem;
+    padding: 1rem;
+  }
+
+  .event-total {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .event-body {
+    padding: 1rem;
+  }
+
+  .day-item {
+    grid-template-columns: 72px 1fr auto;
+    gap: .5rem;
+    font-size: .8rem;
+  }
+
+  .day-date {
+    font-size: .78rem;
+  }
+
+  .day-count-right {
+    min-width: 44px;
+    font-size: .8rem;
+  }
+
+  .event-context {
+    padding: .75rem .85rem;
+    font-size: .82rem;
+  }
+}

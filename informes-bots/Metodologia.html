@@ -1,0 +1,282 @@
+<!DOCTYPE html><html lang='es'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Binary Data | Metodología de Auditorías de Bots</title>
+<meta name="description" content="Documentación Metodológica de nuestras Auditorías de Bots en X - Binary Data">
+<link rel="canonical" href="https://bin-dat.com/informes-bots/Metodologia.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://bin-dat.com/informes-bots/Metodologia.html">
+<meta property="og:title" content="Metodología de Auditorías de Bots - Binary Data">
+<meta property="og:description" content="Documentación Metodológica de nuestras Auditorías de Bots en X - Binary Data">
+<meta property="og:image" content="https://bin-dat.com/share.webp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Metodología de Auditorías de Bots - Binary Data">
+<meta name="twitter:description" content="Documentación Metodológica de nuestras Auditorías de Bots en X - Binary Data">
+<meta name="twitter:image" content="https://bin-dat.com/share.webp">
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#283548; --line:#334155;
+    --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+    --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.65;margin:0;padding:0 16px 80px}
+  .wrap{max-width:960px;margin:0 auto}
+  header{padding:40px 0 20px;border-bottom:1px solid var(--line)}
+  h1{font-size:1.9em;margin:0 0 6px;line-height:1.25}
+  .sub{color:var(--muted);font-size:1.02em}
+  h2{font-size:1.4em;margin-top:44px;color:var(--accent);padding-bottom:8px;border-bottom:2px solid var(--line)}
+  h3{font-size:1.1em;margin:26px 0 8px;color:var(--accent2)}
+  h4{margin:18px 0 6px;color:var(--text)}
+  p{margin:10px 0}
+  ul,ol{margin:8px 0 8px 4px;padding-left:22px}
+  li{margin:5px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:16px 0}
+  .card-title{font-weight:700;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .meta{color:var(--muted);font-size:.9em}
+  code{background:#0b1120;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:Consolas,Menlo,monospace;font-size:.92em}
+  pre{background:#0b1120;border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto}
+  pre code{background:none;border:none;padding:0}
+  blockquote{border-left:3px solid var(--accent);margin:12px 0;padding:8px 16px;background:var(--panel2);color:var(--text);font-style:italic;border-radius:0 8px 8px 0}
+  blockquote p{margin:0}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.93em}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--accent)}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78em;font-weight:600}
+  .t-met{background:rgba(56,189,248,.15);color:var(--accent);border:1px solid var(--accent)}
+  .t-ctx{background:rgba(129,140,248,.15);color:var(--accent2);border:1px solid var(--accent2)}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:.85em;margin:2px}
+  .pill{font-size:.85em}
+  .warn{color:var(--warn)} .bad{color:var(--bad)} .ok{color:var(--ok)}
+  .refs{font-size:.9em}
+  .refs li{color:var(--muted)}
+  .toc a{color:var(--accent);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .toc{columns:2;column-gap:30px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 26px;margin:18px 0}
+  @media(max-width:640px){.toc{columns:1}}
+  footer{margin-top:60px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:.85em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1><a href="https://bin-data.com"><img src="https://bin-dat.com/logo.png"></a> Documentación Metodológica</h1>
+  <div class="sub">Estimación del porcentaje de bots / cuentas falsas en una base de followers — <strong>Ground truth del sistema</strong></div>
+  <div class="meta">Idea original: análisis de followers de un usuario específico · Base de datos SQLite · Metodología fundamentada en bibliografía académica</div>
+</header>
+
+<nav class="toc">
+  <strong>Contenido</strong>
+  <ul>
+    <li><a href="#objetivo">1. Objetivo y alcance</a></li>
+    <li><a href="#contexto">2. Contexto y justificación</a></li>
+    <li><a href="#definiciones">3. Taxonomía de cuentas</a></li>
+    <li><a href="#variables">4. Variables de detección</a></li>
+    <li><a href="#scoring">5. Scoring ponderado</a></li>
+    <li><a href="#cohortes">6. Detección de lotes y cohortes</a></li>
+    <li><a href="#muestreo">7. Validación manual estratificada</a></li>
+    <li><a href="#reporte">8. Estimación y reporte final</a></li>
+    <li><a href="#limitaciones">9. Limitaciones</a></li>
+    <li><a href="#bibliografia">10. Bibliografía</a></li>
+  </ul>
+</nav>
+
+<section id="objetivo">
+  <h2>1. Objetivo y alcance</h2>
+  <p>Estimar, de forma <strong>fiable y reproducible</strong>, qué porcentaje de las cuentas en la base <code>followers</code> de un usuario son bots o cuentas falsas (fantasmas, lotes comprados), articulando señales débiles en un <strong>score ponderado</strong> y reportando un rango de estimación con su intervalo de confianza.</p>
+  <div class="card">
+    <div class="card-title">Datos disponibles por cuenta</div>
+    <p style="margin:4px 0">
+      <span class="badge">username</span>
+      <span class="badge">followers_count</span>
+      <span class="badge">statuses_count</span>
+      <span class="badge">account_created_at (ISO 8601)</span>
+      <span class="badge">ID de cuenta</span>
+    </p>
+    <p class="meta" style="margin-top:10px;margin-bottom:0">Escala: de 3 a 4.5 millones de filas. El análisis se sustenta en <strong>proporciones y muestras representativas</strong>, no en la revisión exhaustiva de cada cuenta.</p>
+  </div>
+  <p>Todo el sistema descrito aquí constituye la <strong>fuente de verdad</strong>: los scripts SQL de la Fase 3 deben corresponderse 1:1 con esta documentación, y cualquier desvío debe justificarse explícitamente.</p>
+</section>
+
+<section id="contexto">
+  <h2>2. Contexto y justificación</h2>
+  <p>Las redes sociales son una fuente primaria de noticias e información susceptible de ser manipulada. Los <em>social bots</em> actúan como "ejércitos coordinados" capaces de amplificar desinformación, propaganda y falsas tendencias <span class="tag t-met">Metodológico</span> <sup>[A9]</sup>. La compra y venta de seguidores en volumen es un <strong>mercado sombra</strong> que infla métricas para hacer parecer influyentes a cuentas e influencers, y puede ser redirigido a fines de desinformación <span class="tag t-ctx">Contexto</span> <sup>[B3]</sup>.</p>
+  <p>Los bots son a su vez un habilitador técnico de campañas de manipulación de la opinión pública (troll farms y redes de cuentas falsas) <span class="tag t-ctx">Contexto</span> <sup>[B1]</sup>, y la manipulación de la conversación digital importa en términos democráticos porque las plataformas son hoy el entorno clave donde ocurren las prácticas de desinformación <span class="tag t-ctx">Contexto</span> <sup>[B2]</sup>.</p>
+  <p>Desde lo empírico, según la bibliografía analizada, <strong>entre el 9% y el 15% de las cuentas activas de Twitter son bots</strong> <sup>[A2]</sup>. Esta cifra proviene de estimaciones de <strong>2017</strong> (hace más de 9 años), por lo que debe leerse como referencia histórica orientativa, no como valor actual. Es nuestro <strong>benchmark de comparación</strong>: si la cuenta auditada queda por encima o por debajo de ese rango, contrastamos contra lo que era esperable en la plataforma en aquel periodo.</p>
+  <blockquote><p>"Our estimates suggest that between 9% and 15% of active Twitter accounts are bots." <span class="meta">— Varol et al., 2017 [A2]</span> <em>(estimación de 2017, referencia histórica)</em></p></blockquote>
+</section>
+
+<section id="definiciones">
+  <h2>3. Taxonomía de cuentas</h2>
+  <p>Siguiendo el marco conceptual de Gorwa &amp; Guilbeault <sup>[A7]</sup>, no tratamos el resultado como binario ("bot o no"). Distinguimos <strong>tipos</strong> de cuenta, porque "bot" no es una categoría única y los tipos tienen señales distintas. La multiclasificación (no binaria) también es defendida por Zago et al. <sup>[A9]</sup>.</p>
+  <table>
+    <tr><th>Categoría</th><th>Definición</th><th>Señales dominantes</th></tr>
+    <tr><td><strong>Bot activo</strong></td><td>Cuenta automatizada con actividad anómala (spam, amplificación)</td><td>posts/día extremos; actividad "incesante" <sup>[A1][A4]</sup></td></tr>
+    <tr><td><strong>Fantasma</strong></td><td>Cuenta sin vida ni interacción (inactividad crónica)</td><td>0 posts y/o 0 followers persistentes en cuentas viejas</td></tr>
+    <tr><td><strong>Lote comprado</strong></td><td>Cuenta perteneciente a una camada coordinada (account farm)</td><td>cohorte de fecha de creación + coherencia interna <sup>[A3][A6]</sup></td></tr>
+    <tr><td><strong>Sospechoso</strong></td><td>Acumula señales débiles combinadas sin un tipo definido</td><td>score ponderado supera umbral</td></tr>
+    <tr><td><strong>Limpia</strong></td><td>Sin señales relevantes</td><td>score bajo</td></tr>
+  </table>
+  <p>Está tipología modera la lectura del resultado: <strong>no todo "bot" es malicioso</strong> (hay bots legítimos de difusión de noticias) y los <em>cyborgs</em> (cuenta con intervención humana parcial) escapan a cualquier detector basado en features <sup>[A1][A7]</sup>. Por eso además del % global, reportamos el desglose por categoría.</p>
+</section>
+
+<section id="variables">
+  <h2>4. Variables de detección</h2>
+  <p>Las features derivadas de nuestros 5 campos se agrupan en las categorías consolidamente reconocidas por la literatura: <strong>user related</strong> (username, edad de cuenta), <strong>friendship</strong> (seguidores), <strong>shared content</strong> (posts) y <strong>time-related</strong> <sup>[A9]</sup>. La literatura converge en que la <strong>metadata de usuario es de lo más predictivo</strong> <sup>[A1][A2]</sup>.</p>
+  <h4>4.1 Variables de username (user-related)</h4>
+  <ul>
+    <li><strong>Longitud del username</strong> (largo &gt; 15): los bots tienden a usernames más largos <sup>[A1]</sup>.</li>
+    <li><strong>Presencia de dígitos</strong> (≥4, típicamente al final): usernames "auto-generados" <sup>[A4][A8][A6]</sup>.</li>
+    <li><strong>Prefijo compartido</strong>: nombres en serie; útil para fingerprinting de farms <sup>[A6]</sup>.</li>
+  </ul>
+  <h4>4.2 Variables de antigüedad (user/time-related)</h4>
+  <ul>
+    <li><strong>días_antiguedad</strong> = <code>julianday('now') - julianday(account_created_at)</code>.</li>
+    <li><strong>Cuenta reciente</strong> (&lt; 90 días): "bot accounts also tend to be more recent" <sup>[A1][A4]</sup>.</li>
+    <li><strong>PRECAUCIÓN CLAVE (USENIX)</strong>: la antigüedad <strong>no prueba humanidad</strong>. Las cuentas compradas se "envejecen" (pre-aged) y se venden meses después <sup>[A6]</sup>. La fecha de creación sirve para detectar <strong>lotes</strong>, no como prueba de cuenta humana.</li>
+  </ul>
+  <h4>4.3 Variables de actividad (friendship/content)</h4>
+  <ul>
+    <li><strong>posts_por_dia</strong> = <code>statuses_count / días_antiguedad</code>: feature top confirmada <sup>[A8]</sup>.</li>
+    <li><strong>Volume anómalo</strong>: bots muestran "incessant activity and excessive amounts of tweets" <sup>[A4]</sup>. Umbral indicativo de rango humano: 2–50 posts/día (basado en RTbust, que reclasifica como "human-like" la actividad 2–50/día <sup>[A5]</sup>).</li>
+    <li><strong>Cero posts en cuenta vieja</strong> (&gt;1 año): fantasma crónico.</li>
+  </ul>
+  <h4>4.4 Ratio followers/followees</h4>
+  <p>"bots usually have less followers and more followees" <sup>[A4]</sup>. Requiere <code>friends_count</code> (no en el esquema base). Se marca como <em>feature ausente</em> que mejoraría el sistema si se añadiera (ver Limitaciones).</p>
+  <h4>4.5 Análisis de IDs (lotes)</h4>
+  <p>Los IDs tipo snowflake codifican el momento de creación. IDs consecutivos o muy cercanos entre cuentas del mismo usuario indican <strong>registro en ráfaga</strong>, señal de lote comprado más fuerte que la fecha declarada <sup>[A3][A6]</sup>.</p>
+  <div class="card">
+    <div class="card-title">Resumen señal → fuente</div>
+    <table>
+      <tr><th>Señal</th><th>Paper(s)</th></tr>
+      <tr><td>Antigüedad / fecha de creación</td><td>Ferrara 2016 [A1]; Varol 2017 [A2]; Bessi 2016 [A4]</td></tr>
+      <tr><td><strong>Cohorte / lote</strong> (agrupación temporal de creación)</td><td><strong>Cresci 2017 [A3]; USENIX 2013 [A6]; RTbust 2019 [A5]; SLR 2023 [A8]</strong></td></tr>
+      <tr><td>Volumen de posts / posts por día</td><td>Bessi 2016 [A4]; SLR 2023 [A8]</td></tr>
+      <tr><td>Longitud y dígitos del username</td><td>Ferrara 2016 [A1]; Bessi 2016 [A4]; USENIX 2013 [A6]; SLR 2023 [A8]</td></tr>
+      <tr><td>Ratio followers/followees</td><td>Bessi 2016 [A4]; Varol 2017 [A2]; SLR 2023 [A8]</td></tr>
+      <tr><td>Segmentación por tipo</td><td>Gorwa &amp; Guilbeault 2018 [A7]; Zago 2019 [A9]</td></tr>
+      <tr><td>Validación manual (human-in-the-loop)</td><td>Zago 2019 [A9]</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="scoring">
+  <h2>5. Scoring ponderado</h2>
+  <p>Los bots modernos pueden imitar el comportamiento humano de forma que <strong>ningún umbral simple es suficiente</strong> <sup>[A9]</sup>, y ningún feature aislado identifica un bot <sup>[A8]</sup>. Por ello usamos un <strong>score acumulativo ponderado</strong>. Siguiendo a Cresci <sup>[A3]</sup>, las señales de <strong>comportamiento colectivo / coordinación</strong> (cohortes, lotes) tienen el peso más alto, porque son las más robustas contra bots sofisticados; los rasgos de perfil individual son señales más débiles.</p>
+
+  <h4>5.1 Pesos v1 (priors iniciales)</h4>
+  <table>
+    <tr><th>Señal</th><th>Peso</th><th>Justificación</th></tr>
+    <tr><td>Cohorte anómala coherente</td><td class="bad">3.0</td><td>Comportamiento colectivo <sup>[A3][A6]</sup></td></tr>
+    <tr><td>IDs en rango consecutivo (lote)</td><td class="bad">3.0</td><td>Registro en ráfaga <sup>[A3][A6]</sup></td></tr>
+    <tr><td>0 posts + cuenta &gt; 1 año</td><td class="warn">2.5</td><td>Fantasma crónico confirmado por tiempo</td></tr>
+    <tr><td>posts/día &gt; 50</td><td class="warn">2.0</td><td>Capacidad de posteo "sobrehumana" <sup>[A1][A4]</sup></td></tr>
+    <tr><td>&lt; 90 días + (followers &gt; 1000 o 0 posts)</td><td>1.5</td><td>Nuevo sin trayectoria <sup>[A1][A4]</sup></td></tr>
+    <tr><td>0 posts O 0 followers (una sola señal)</td><td>1.0</td><td>Débil (usuarios reales lurkean)</td></tr>
+    <tr><td>≥4 dígitos en username</td><td>0.75</td><td>Rasgo de perfil, ruidoso <sup>[A4][A6]</sup></td></tr>
+    <tr><td>username &gt; 15 chars o prefijo compartido</td><td>0.75</td><td>Ídem <sup>[A1][A4]</sup></td></tr>
+  </table>
+
+  <h4>5.2 Bandas</h4>
+  <table>
+    <tr><th>Banda</th><th>Rango</th><th>Interpretación</th></tr>
+    <tr><td>Baja / limpia</td><td>&lt; 1.5</td><td>Sin señales relevantes</td></tr>
+    <tr><td>Dudoso</td><td>1.5 – 2.9</td><td>Señales débiles</td></tr>
+    <tr><td>Alto riesgo</td><td>≥ 3.0</td><td>Probable bot/fantasma/lote</td></tr>
+    <tr><td>Muy probable</td><td>≥ 5.0</td><td>Múltiples señales fuertes</td></tr>
+  </table>
+  <p class="warn"><strong>Importante:</strong> estos pesos son <em>priors justificados por la literatura</em>, no valores finales. Se calibran en la Fase 3 mediante validación manual (ver sección 7), iterando de v1 a v2, v3… Se mantiene un registro versionado de pesos para reproducibilidad.</p>
+</section>
+
+<section id="cohortes">
+  <h2>6. Detección de lotes y cohortes</h2>
+  <p>Esta es la señal <strong>más robusta y prioritaria</strong> del sistema, porque se basa en comportamiento colectivo, no en features individuales fáciles de imitar <sup>[A3]</sup>.</p>
+  <blockquote><p>"a large enough group of spambots will still leave traces of automation, since they do have a common goal" <span class="meta">— Cresci et al., 2017 [A3]</span></p></blockquote>
+  <ul>
+    <li>Los social spambots muestran <strong>distribuciones anómalas de fecha de creación y followers</strong> frente a cuentas genuinas, que se distribuyen de forma más uniforme <sup>[A3]</sup>.</li>
+    <li>Los vendedores de cuentas crean <strong>lotes (batches)</strong> con fechas de registro agrupadas, las "envejecen" (mediana 31 días) y las venden en bloques que abarcan meses <sup>[A6]</sup>.</li>
+  </ul>
+  <h4>6.1 Niveles de agrupación</h4>
+  <ul>
+    <li><strong>Día exacto</strong>: <code>date(account_created_at)</code>.</li>
+    <li><strong>Semana</strong>: <code>strftime('%Y-%W', account_created_at)</code> (vendedores reposan stock).</li>
+  </ul>
+  <h4>6.2 Regla de anomalía</h4>
+  <p><code>conteo &gt; mediana_global + 3 × IQR</code> (con sensibilidad alternativa usando P95/P99). Con millones de filas se usan percentiles robustos.</p>
+  <h4>6.3 Coherencia interna (anti-falsos positivos)</h4>
+  <p>La cohorte solo se marca como anómala si además cumple coherencia interna: <strong>≥50% con 0 posts</strong>, <strong>o ≥3 prefijos de username compartidos</strong> dentro del día. Esto distingue un "lote comprado" de un "día viral real" con mucha gente creándose cuentas.</p>
+  <h4>6.4 Análisis de IDs</h4>
+  <p>Densidad de gaps entre IDs en rangos consecutivos / muy cercanos = registro en ráfaga → evidencia de lote más fuerte que la fecha declarada <sup>[A3][A6]</sup>.</p>
+</section>
+
+<section id="muestreo">
+  <h2>7. Validación manual estratificada</h2>
+  <p>El score necesita calibración sobre datos reales y verificación por ojos humanos, en línea con el enfoque de aprendizaje activo con humano-en-el-bucle <sup>[A9]</sup>.</p>
+  <ul>
+    <li><strong>Estratos</strong>: las bandas del score (baja, dudosa, alto, muy probable) + un estrato aleatorio simple (baseline).</li>
+    <li><strong>Tamaño de muestra</strong>: <strong>n ≈ 384 por estrato</strong> (error ±5% con 95% de confianza para proporciones). Se arranca con 100/estrato y se decide.</li>
+    <li><strong>Extracción</strong>: <code>ORDER BY RANDOM() LIMIT n</code> por estrato, exportada a CSV para revisión.</li>
+    <li><strong>Etiquetado</strong>: el usuario marca cada cuenta como verdadero/falso bot → se calcula precisión por banda → se ajustan pesos (v2) y umbrales.</li>
+    <li><strong>Iteración</strong>: típicamente 2–3 rondas hasta estabilidad.</li>
+  </ul>
+  <p class="pill meta">Este procedimiento estima la <strong>precisión por banda</strong> y permite reportar el resultado final con su intervalo de confianza, requisito de una "estimación fiable".</p>
+</section>
+
+<section id="reporte">
+  <h2>8. Estimación y reporte final</h2>
+  <ul>
+    <li><strong>% por categoría</strong>: bot activo / fantasma / lote / sospechoso / limpia.</li>
+    <li><strong>% por banda</strong> del score.</li>
+    <li><strong>Rango de estimación</strong>: mínimo = alto riesgo + lotes confirmados; máximo = al menos dudoso.</li>
+    <li><strong>Intervalo de confianza (95%)</strong> derivado del remuestreo / validación manual.</li>
+    <li><strong>Comparación con benchmark</strong>: referencia 9–15% de bots en plataformas <sup>[A2][A9]</sup>.</li>
+  </ul>
+  <p>Principio: se reporta un <strong>rango calibrable</strong>, no un número falso de precisión, porque los datos disponibles y los métodos no garantizan un número exacto.</p>
+</section>
+
+<section id="limitaciones">
+  <h2>9. Limitaciones decladas</h2>
+  <ul>
+    <li><strong>Bots sofisticados evaden features individuales</strong>: los social spambots pasan desapercibidos a nivel cuenta <sup>[A3]</sup>; nuestro sistema prioriza por ello los lotes/cohortes, que los agarran por coordinación.</li>
+    <li><strong>Cyborgs indetectables</strong>: cualquier nivel de intervención humana desestabiliza modelos basados en features de cuenta <sup>[A7]</sup>.</li>
+    <li><strong>Sin ground truth etiquetado</strong>: el score se calibra con muestreo manual; no es una probabilidad formalmente calibrada.</li>
+    <li><strong>Campos limitados</strong>: sin <code>bio</code>, <code>profile_image</code>, <code>last_status_at</code> ni <code>friends_count</code> → no aplicamos default-profile ni ratio followers/followees (dos features fuertes en la literatura <sup>[A2][A4]</sup>).</li>
+    <li><strong>Sin series temporales de actividad</strong>: los métodos RTbust/FullBotometer no son aplicables <sup>[A5]</sup>.</li>
+    <li><strong>Cuenta "pre-aged" no exculpa</strong> <sup>[A6]</sup>: la antigüedad se usa para lotes, no como prueba de humanidad.</li>
+    <li><strong>Benchmark orientativo</strong>: el % de referencia varía entre papers, épocas y datasets <sup>[A2][A9]</sup>.</li>
+  </ul>
+</section>
+
+<section id="bibliografia">
+  <h2>10. Bibliografía</h2>
+  <p>A continuación, la bibliografía analizada, organizada por rol. Las marcas [An] corresponden a los documentos presentes en la carpeta <code>Bibliografía</code>.</p>
+
+  <h3>Núcleo metodológico</h3>
+  <ol class="refs">
+    <li>[A1] Ferrara, E., Varol, O., Davis, C., Menczer, F., &amp; Flammini, A. (2016). <em>The Rise of Social Bots</em>. Communications of the ACM, 59(7), 96–104. DOI: 10.1145/2818717 · <a href="https://arxiv.org/abs/1407.5225">arXiv</a></li>
+    <li>[A2] Varol, O., Ferrara, E., Davis, C. A., Menczer, F., &amp; Flammini, A. (2017). <em>Online Human-Bot Interactions: Detection, Estimation, and Characterization</em>. Proc. ICWSM 2017 (AAAI). <a href="https://aaai.org/ocs/index.php/ICWSM/ICWSM17/paper/view/15587">ICWSM</a></li>
+    <li>[A3] Cresci, S., Di Pietro, R., Petrocchi, M., Spognardi, A., &amp; Tesconi, M. (2017). <em>The Paradigm-Shift of Social Spambots: Evidence, Theories, and Tools for the Arms Race</em>. WWW 2017 Companion. DOI: 10.1145/3041021.3055135 · <a href="https://arxiv.org/abs/1701.03017">arXiv</a></li>
+    <li>[A4] Bessi, A., &amp; Ferrara, E. (2016). <em>Social Bots Distort the 2016 U.S. Presidential Election Online Discussion</em>. First Monday, 21(11). DOI: 10.5210/fm.v21i11.7090 · <a href="https://firstmonday.org/ojs/index.php/fm/article/view/7090">First Monday</a></li>
+    <li>[A5] Mazza, M., Cresci, S., Avvenuti, M., Quattrociocchi, W., &amp; Tesconi, M. (2019). <em>RTbust: Exploiting Temporal Patterns for Botnet Detection on Twitter</em>. ACM WebSci 2019. <a href="https://arxiv.org/abs/1902.04506">arXiv</a></li>
+    <li>[A6] Thomas, K., McCoy, D., Grier, C., Kolcz, A., &amp; Paxson, V. (2013). <em>Trafficking Fraudulent Accounts: The Role of the Underground Market in Twitter Spam and Abuse</em>. 22nd USENIX Security Symposium. <a href="https://www.usenix.org/conference/usenixsecurity13/technical-sessions/paper/thomas">USENIX</a></li>
+    <li>[A7] Gorwa, R., &amp; Guilbeault, D. (2018). <em>Unpacking the Social Media Bot: A Typology to Guide Research and Policy</em>. Policy &amp; Internet, 12(2), 225–248. <a href="https://arxiv.org/abs/1801.06863">arXiv</a></li>
+    <li>[A8] Ellaky, Z., Benabbou, F., &amp; Ouahabi, S. (2023). <em>Systematic Literature Review of Social Media Bots Detection Systems</em>. Journal of King Saud University – Computer and Information Sciences, 35, 101551. DOI: 10.1016/j.jksuci.2023.04.004 · <a href="https://doi.org/10.1016/j.jksuci.2023.04.004">ScienceDirect</a></li>
+    <li>[A9] Zago, M., Nespoli, P., Papamartzivanos, D., Gil Pérez, M., Gómez Mármol, F., Kambourakis, G., &amp; Martínez Pérez, G. (2019). <em>Screening Out Social Bots Interference: Are There Any Silver Bullets?</em>. IEEE Communications Magazine, 57(8), 98–104. DOI: 10.1109/MCOM.2019.1800520</li>
+  </ol>
+
+  <h3>Contexto (desinformación y mercado)</h3>
+  <ol class="refs">
+    <li>[B1] Frederick, K. (2019). <em>The New War of Ideas: Counterterrorism Lessons for the Digital Disinformation Fight</em>. Center for a New American Security (CNAS). JSTOR resrep20399.</li>
+    <li>[B2] Terzis, G., Kloza, D., Kużelewska, E., &amp; Trottier, D. (eds.) (2020). <em>Disinformation and Digital Media as a Challenge for Democracy</em>. Intersentia. ISBN 978-1-78068-975-3.</li>
+    <li>[B3] Diaz Ruiz, C. (2025). <em>Market-Oriented Disinformation Research: Digital Advertising, Disinformation and Fake News on Social Media</em>. Routledge Studies in Marketing, vol. 50. DOI: 10.4324/9781003506676 (Open Access).</li>
+  </ol>
+</section>
+
+<footer>
+  Documento generado por <strong>Binary Data</strong> como ground truth metodológico del proyecto de auditoría de followers. · Pesos v1 a calibrar por validación manual.
+</footer>
+
+</div>
+</body>
+</html>

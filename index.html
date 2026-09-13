@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="En Binary Data realizamos auditorías y análisis de datos a gran escala para que puedas tomar la mejor decisión.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bin-dat.com/">
+<meta property="og:title" content="Binary Data | Análisis de Datos">
+<meta property="og:description" content="En Binary Data realizamos auditorías y análisis de datos a gran escala para que puedas tomar la mejor decisión.">
+<meta property="og:image" content="https://bin-dat.com/share.webp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Binary Data | Análisis de Datos">
+<meta name="twitter:description" content="En Binary Data realizamos auditorías y análisis de datos a gran escala para que puedas tomar la mejor decisión.">
+<meta name="twitter:image" content="https://bin-dat.com/share.webp">
+<link rel="stylesheet" href="styles.css">
+<title>Binary Data | Análisis de Datos</title>
+</head>
+<body>
+  <div class="bits" id="bits"></div>
+<main>
+  <img class="logo" src="logo.png" alt="Binary Data">
+  <div class="tagline">coleccionistas de datos<span class="cursor"></span></div>
+  <nav>
+    <a class="btn primary" href="https://bin-dat.com/informes-bots/index.html">Informes de BOTS</a>
+    <a class="btn primary" href="https://bin-dat.com/sipa-argentina/index.html">Trabajo Registrado (SIPA)</a>
+  </nav>
+</main>
+
+<script>
+  // genera dígitos 0/1 pseudo-aleatorios cubriendo exactamente el viewport, sin cortes
+  const el = document.getElementById('bits');
+  const CHAR_W = 12.4;  // avance aproximado por carácter (glifo + letter-spacing) a 13px
+  const LINE_H = 24.7;  // alto de línea aproximado a font-size:13px, line-height:1.9
+
+  function paintBits() {
+    const cols = Math.ceil(window.innerWidth / CHAR_W) + 4;
+    const rows = Math.ceil(window.innerHeight / LINE_H) + 2;
+    let out = '';
+    for (let r = 0; r < rows; r++) {
+      let row = '';
+      for (let c = 0; c < cols; c++) row += Math.random() > 0.5 ? '1' : '0';
+      out += row + '\n';
+    }
+    el.textContent = out;
+  }
+
+  paintBits();
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(paintBits, 150);
+  });
+</script>
+</body>
+</html>

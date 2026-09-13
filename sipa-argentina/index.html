@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Índice de Trabajo Registrado (SIPA) | Binary Data</title>
+    <link rel="canonical" href="https://bin-dat.com/sipa-argentina/index.html">
+    <meta name="description" content="Histórico completo del Trabajo Registrado (SIPA) en Argentina desde 2007, actualizado todos los meses. Visualización por mandato presidencial y tablas filtrables.">
+    <meta property="og:title" content="Trabajo Registrado en Argentina (SIPA) — Serie histórica 2007-2026">
+    <meta property="og:description" content="Recopilación de los informes oficiales de Trabajo Registrado (SIPA) desde 2007, con series por mandato presidencial y tablas filtrables. Se actualiza todos los meses.">
+    <meta property="og:image" content="https://bin-dat.com/share.webp">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bin-dat.com/sipa-argentina/index.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Trabajo Registrado en Argentina (SIPA) — Serie histórica 2007-2026">
+    <meta name="twitter:description" content="Histórico oficial de Trabajo Registrado (SIPA) en Argentina desde 2007, con series por mandato presidencial y tablas filtrables.">
+    <meta name="twitter:image" content="https://bin-dat.com/share.webp">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a class="topbar-logo" href="https://bin-dat.com" target="_blank" rel="noopener">
+          <img src="https://bin-dat.com/logo.png" alt="Binary Data">
+        </a>
+        <div class="topbar-text">
+          <h1>Índice de Trabajo Registrado<span class="badge">SIPA</span></h1>
+          <p class="sub">Situación y evolución del trabajo registrado · Series desde ene-2009, construidas con los informes SIPA y su anexo estadístico (jun-2026)</p>
+        </div>
+      </div>
+    </header>
+  <main class="wrap">
+    <!-- Selector de período presidencial -->
+    <section class="periodo-bar" id="periodo-bar">
+      <span class="periodo-titulo">Período presidencial:</span>
+      <button class="chip active" data-periodo="historico">Histórico</button>
+      <button class="chip" data-periodo="milei">Javier Milei <small>dic-23 → hoy</small></button>
+      <button class="chip" data-periodo="fernandez">Alberto Fernández <small>dic-19 → dic-23</small></button>
+      <button class="chip" data-periodo="macri">Mauricio Macri <small>dic-15 → dic-19</small></button>
+      <button class="chip" data-periodo="cfk">Cristina F. de Kirchner <small>dic-07 → dic-15</small></button>
+      <span class="periodo-nota" id="periodo-nota"></span>
+    </section>
+    <!-- KPIs último mes -->
+    <section id="kpis" class="kpi-grid"></section>
+    <!-- Balance del período presidencial -->
+    <section class="card" id="balance-card" hidden>
+      <h2 id="balance-titulo">Balance del período presidencial</h2>
+      <p class="note" id="balance-nota"></p>
+      <div class="table-wrap"><table id="balance-tabla"></table></div>
+    </section>
+    <section class="card">
+      <h2>Evolución del trabajo registrado</h2>
+      <p class="note" data-note="total">Total de trabajadores registrados, en millones de personas. Serie original y desestacionalizada.</p>
+      <div class="chart-box tall"><canvas id="chTotal"></canvas></div>
+      <p class="src">Fuente: Tabla 4 de los informes SIPA. La caída de dic-2024 responde al reempadronamiento del monotributo social (Res. 603/2024).</p>
+    </section>
+    <div class="grid-2">
+      <section class="card">
+        <h2>Variación mensual desestacionalizada</h2>
+        <p class="note" data-note="varm">Trabajadores registrados totales, % mensual desestacionalizada.</p>
+        <div class="chart-box"><canvas id="chVarM"></canvas></div>
+      </section>
+      <section class="card">
+        <h2>Variación interanual</h2>
+        <p class="note" data-note="vara">Total registrados y asalariados privados, porcentaje interanual.</p>
+        <div class="chart-box"><canvas id="chVarA"></canvas></div>
+      </section>
+    </div>
+    <section class="card">
+      <h2>Asalariados registrados del sector privado</h2>
+      <p class="note" data-note="priv">Asalariados privados registrados, en millones de personas.</p>
+      <div class="chart-box"><canvas id="chPriv"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Trabajo registrado por modalidad ocupacional</h2>
+      <p class="note" data-note="mod">Millones de personas por modalidad ocupacional.</p>
+      <div class="chart-box tall"><canvas id="chMod"></canvas></div>
+    </section>
+    <div class="grid-2">
+      <section class="card">
+        <h2>Independientes en detalle</h2>
+        <p class="note" data-note="indep">Monotributo, autónomos y monotributo social (millones de personas).</p>
+        <div class="chart-box"><canvas id="chIndep"></canvas></div>
+      </section>
+      <section class="card">
+        <h2>Composición actual</h2>
+        <p class="note" data-note="comp">Distribución por modalidad.</p>
+        <div class="chart-box"><canvas id="chComp"></canvas></div>
+      </section>
+    </div>
+    <section class="card">
+      <h2>Remuneraciones brutas — asalariados privados</h2>
+      <p class="note" data-note="rem">Remuneración media y mediana nominal (pesos, escala logarítmica).</p>
+      <div class="chart-box"><canvas id="chRem"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Remuneraciones: variación interanual nominal</h2>
+      <p class="note" data-note="remva">Porcentaje interanual de la remuneración media y mediana.</p>
+      <div class="chart-box"><canvas id="chRemVa"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Asalariados privados por rama de actividad</h2>
+      <p class="note" data-note="ramas">Millones de trabajadores por rama de actividad.</p>
+      <div class="controls"><button id="btnRamasN" class="chip active">Nivel (millones)</button><button id="btnRamasV" class="chip">Variación interanual (%)</button></div>
+      <div class="chart-box tall"><canvas id="chRamas"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Asalariados privados por provincia</h2>
+      <p class="note" data-note="prov">Nivel (millones) y variación interanual por provincia.</p>
+      <div class="controls"><button id="btnProvN" class="chip active">Nivel (millones)</button><button id="btnProvV" class="chip">Variación interanual (%)</button></div>
+      <div class="chart-box tall"><canvas id="chProv"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Evolución histórica por rama de actividad</h2>
+      <p class="note" data-note="ramashist">Asalariados privados por rama, millones de personas. Hacé clic en la leyenda para mostrar/ocultar ramas.</p>
+      <div class="chart-box tall"><canvas id="chRamasHist"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Evolución histórica por provincia</h2>
+      <p class="note" data-note="provhist">Asalariados privados por provincia, millones de personas. Hacé clic en la leyenda para mostrar/ocultar provincias.</p>
+      <div class="chart-box tall"><canvas id="chProvHist"></canvas></div>
+    </section>
+    <section class="card tabla-card">
+      <h2>Tabla de datos — serie total</h2>
+      <p class="note" data-note="tabla">Trabajadores registrados (millones), serie desestacionalizada y variaciones. La columna "Var. interanual (miles)" está en miles de personas.</p>
+      <div class="table-wrap"><table id="tblData"></table></div>
+    </section>
+    <footer>
+      <p><strong>Fuente:</strong> Informes "Situación y evolución del trabajo registrado (SIPA)" — 86 informes procesados (abr-2018 a jun-2026) y anexo estadístico histórico del informe jun-2026 (trabajoregistrado_2606_estadisticas.xlsx), Secretaría de Trabajo, Empleo y Seguridad Social — Ministerio de Capital Humano, sobre la base del SIPA (ARCA).</p>
+      <p><strong>Validación:</strong> las series históricas del anexo fueron contrastadas contra las Tablas 4 y 5 publicadas en cada informe (126 meses superpuestos, 2016-2026) sin diferencias significativas. Los últimos 12 meses tienen carácter provisorio.</p>
+      <p>Los datos de los últimos 12 meses tienen carácter provisorio según la política de revisión de la publicación oficial. Las remuneraciones incluyen SAC y conceptos no remunerativos declarados.</p>
+      <p class="gen">Sitio generado para uso público por <a href="https://x.com/Binary_Data01" target="_blank" rel="noopener">Binary Data</a></p>
+    </footer>
+  </main>
+    <script src="data/sipa_data.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/share.js"></script>
+  </body>
+</html>
