@@ -564,7 +564,6 @@
       btn.classList.add('active');
       periodo = PERIODOS[btn.dataset.periodo];
       renderAll();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 
