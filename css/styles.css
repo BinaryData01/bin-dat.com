@@ -19,6 +19,7 @@ body {
   position: relative;
 }
 
+/* sutil textura de dígitos binarios de fondo, referencia directa al nombre de marca */
 .bits {
   position: fixed;
   inset: 0;
@@ -62,7 +63,7 @@ main {
   width: 7px;
   height: 1em;
   margin-left: 2px;
-  background: #00b8e6;
+  background: #00bbfd;
   vertical-align: -0.15em;
   animation: blink 1.1s steps(1) infinite;
 }
@@ -94,13 +95,13 @@ nav {
 }
 
 .btn:hover {
-  border-color: #00b8b6;
+  border-color: #00bbfd;
   background: #0d1520;
   transform: translateY(-1px);
 }
 
 .btn.primary {
-  border-color: #00b8b6;
+  border-color: #00bbfd;
   background: linear-gradient(135deg, #0a2438, #0a1826);
   color: #f2fbff;
 }

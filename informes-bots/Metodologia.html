@@ -12,63 +12,19 @@
 <meta name="twitter:title" content="Metodología de Auditorías de Bots - Binary Data">
 <meta name="twitter:description" content="Documentación Metodológica de nuestras Auditorías de Bots en X - Binary Data">
 <meta name="twitter:image" content="https://bin-dat.com/share.webp">
-<style>
-  :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#283548; --line:#334155;
-    --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
-    --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
-  }
-  *{box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.65;margin:0;padding:0 16px 80px}
-  .wrap{max-width:960px;margin:0 auto}
-  header{padding:40px 0 20px;border-bottom:1px solid var(--line)}
-  h1{font-size:1.9em;margin:0 0 6px;line-height:1.25}
-  .sub{color:var(--muted);font-size:1.02em}
-  h2{font-size:1.4em;margin-top:44px;color:var(--accent);padding-bottom:8px;border-bottom:2px solid var(--line)}
-  h3{font-size:1.1em;margin:26px 0 8px;color:var(--accent2)}
-  h4{margin:18px 0 6px;color:var(--text)}
-  p{margin:10px 0}
-  ul,ol{margin:8px 0 8px 4px;padding-left:22px}
-  li{margin:5px 0}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:16px 0}
-  .card-title{font-weight:700;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:8px}
-  .meta{color:var(--muted);font-size:.9em}
-  code{background:#0b1120;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:Consolas,Menlo,monospace;font-size:.92em}
-  pre{background:#0b1120;border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto}
-  pre code{background:none;border:none;padding:0}
-  blockquote{border-left:3px solid var(--accent);margin:12px 0;padding:8px 16px;background:var(--panel2);color:var(--text);font-style:italic;border-radius:0 8px 8px 0}
-  blockquote p{margin:0}
-  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.93em}
-  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
-  th{background:var(--panel2);color:var(--accent)}
-  tr:nth-child(even) td{background:rgba(255,255,255,.02)}
-  .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78em;font-weight:600}
-  .t-met{background:rgba(56,189,248,.15);color:var(--accent);border:1px solid var(--accent)}
-  .t-ctx{background:rgba(129,140,248,.15);color:var(--accent2);border:1px solid var(--accent2)}
-  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:.85em;margin:2px}
-  .pill{font-size:.85em}
-  .warn{color:var(--warn)} .bad{color:var(--bad)} .ok{color:var(--ok)}
-  .refs{font-size:.9em}
-  .refs li{color:var(--muted)}
-  .toc a{color:var(--accent);text-decoration:none}
-  .toc a:hover{text-decoration:underline}
-  .toc{columns:2;column-gap:30px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 26px;margin:18px 0}
-  @media(max-width:640px){.toc{columns:1}}
-  footer{margin-top:60px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:.85em}
-</style>
+<link rel="stylesheet" href="css/metod.css">
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <a href="https://bin-dat.com"><img src="https://bin-dat.com/logo.png"></a>
-  <h1>Documentación Metodológica</h1>
-  <div class="sub">Estimación del porcentaje de bots / cuentas falsas en una base de followers — <strong>Ground truth del sistema</strong></div>
-  <div class="meta">Idea original: análisis de followers de un usuario específico · Base de datos SQLite · Metodología fundamentada en bibliografía académica</div>
+  <a href="/informes-bots"><img src="../img/logobinarydata-horizontal.png"></a>
+  <h1>Documentación Metodológica para la Detección de Bots</h1>
+  <div class="sub">Estimación del porcentaje de bots y/ó cuentas falsas en una base de followers — Ground truth del sistema</div>
+  <div class="meta">Idea original: Análisis de followers de un usuario específico · Metodología fundamentada según bibliografía académica</div>
 </header>
 
 <nav class="toc">
-  <strong>Contenido</strong>
   <ul>
     <li><a href="#objetivo">1. Objetivo y alcance</a></li>
     <li><a href="#contexto">2. Contexto y justificación</a></li>

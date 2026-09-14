@@ -53,14 +53,14 @@ section {
 /* --- Tipografía / jerarquía de encabezados --- */
 h1 {
   margin: 0 0 6px;
-  font-size: 22px;
-  color: #0098d9;
+  font-size: 18px;
+  color: #00B8E6;
 }
 
 h2 {
   margin: 0 0 6px;
-  font-size: 19px;
-  color: #0098d9;
+  font-size: 22px;
+  color: #00B8E6;
 }
 
 h3 {
@@ -75,7 +75,7 @@ h3 {
   height: 26px;
   margin-right: 10px;
   border-radius: 6px;
-  background: #0098d9;
+  background: #00B8E6;
   color: #08121f;
   font-weight: 700;
   font-size: 14px;
@@ -132,7 +132,7 @@ tr:hover td {
   margin: 4px 0 0;
   font-size: 28px;
   font-weight: 700;
-  color: #00bbfd;
+  color: #00B8E6;
 }
 
 .kpi .lbl {
@@ -147,13 +147,13 @@ tr:hover td {
   padding: 34px;
   text-align: center;
   background: linear-gradient(135deg, #0e1c36, #062035);
-  border: 1px solid #0098d9;
+  border: 1px solid #00B8E6;
 }
 
 .hero .big {
   font-size: 52px;
   font-weight: 800;
-  color: #00bbfd;
+  color: #00B8E6;
 }
 
 .hero .tag {
@@ -174,7 +174,7 @@ tr:hover td {
 .bar span {
   display: block;
   height: 100%;
-  background: #0098d9;
+  background: #00B8E6;
 }
 
 .bar2 {
@@ -250,7 +250,7 @@ footer {
   }
   header {
     background: #eee;
-    border-bottom: 2px solid #0098d9;
+    border-bottom: 2px solid #00B8E6;
   }
   .kpi .box {
     background: #f5f5f5;
@@ -319,7 +319,7 @@ footer {
   width: 26px;
   height: 26px;
   margin-right: .5rem;
-  background: #00bbfd;
+  background: #00B8E6;
   color: #08121f;
   border-radius: 50%;
   font-weight: 700;
@@ -405,7 +405,7 @@ footer {
   justify-content: flex-end;
   height: 100%;
   padding-right: 6px;
-  background: linear-gradient(90deg, #0098d9, #00bbfd);
+  background: linear-gradient(90deg, #00B8E6, #00bbfd);
   border-radius: 4px;
 }
 
@@ -425,7 +425,7 @@ footer {
 .event-context {
   padding: .9rem 1rem;
   background: rgba(0, 187, 253, .1);
-  border-left: 3px solid #00bbfd;
+  border-left: 3px solid #00B8E6;
   border-radius: 4px;
   color: #cbd5e1;
   font-size: .9rem;
