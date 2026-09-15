@@ -17,7 +17,7 @@
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
       img.onerror = () => resolve(null);
-      img.src = 'https://bin-dat.com/logo.png';
+      img.src = 'https://bin-dat.com/img/logobinarydata-horizontal.png';
       setTimeout(() => resolve(null), 4000);
     });
     return logoPromise;
