@@ -137,12 +137,107 @@
       .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
   }
 
-  // Insertar botones en cada tarjeta que tenga canvas
+  // Convierte un SVG inline a canvas (para el mapa)
+  function svgToCanvas(svg, bg) {
+    return new Promise((resolve, reject) => {
+      const xml = new XMLSerializer().serializeToString(svg);
+      const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)));
+      const img = new Image();
+      img.onload = () => {
+        const ratio = svg.viewBox.baseVal.height / svg.viewBox.baseVal.width;
+        const w = 900, h = Math.round(w * ratio);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const x = c.getContext('2d');
+        x.fillStyle = bg;
+        x.fillRect(0, 0, w, h);
+        x.drawImage(img, 0, 0, w, h);
+        resolve(c);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  // Ranking provincial a canvas (columna derecha de la tarjeta del mapa)
+  function rankingToCanvas(W, H) {
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    x.fillStyle = BG;
+    x.fillRect(0, 0, W, H);
+    const rows = Array.from(document.querySelectorAll('#mapa-ranking .rank-row'));
+    if (!rows.length) return c;
+    const pad = 14;
+    x.textBaseline = 'alphabetic';
+    x.textAlign = 'left';
+    x.fillStyle = MUTED;
+    x.font = '700 18px "Segoe UI", system-ui, sans-serif';
+    x.fillText('RANKING PROVINCIAL', pad, 26);
+    const rowH = Math.floor((H - 44) / rows.length);
+    rows.forEach((r, i) => {
+      const num = r.querySelector('.rank-num').textContent;
+      const nom = r.querySelector('.rank-nom').textContent;
+      const val = r.querySelector('.rank-val').textContent;
+      const bar = r.querySelector('.rank-bar');
+      const bw = parseFloat(bar.style.width) || 0;
+      const barColor = bar.style.background || MUTED;
+      const y = 44 + i * rowH;
+      if (i) { x.strokeStyle = '#1c2a3f'; x.lineWidth = 1; x.beginPath(); x.moveTo(pad, y); x.lineTo(W - pad, y); x.stroke(); }
+      x.fillStyle = MUTED;
+      x.font = '600 13px "Segoe UI", system-ui, sans-serif';
+      x.fillText(num, pad, y + 15);
+      x.fillStyle = FG;
+      x.font = '14px "Segoe UI", system-ui, sans-serif';
+      x.fillText(nom, pad + 18, y + 15);
+      x.fillStyle = '#0b1520';
+      x.fillRect(pad, y + 19, W - pad * 2, 6);
+      x.fillStyle = barColor;
+      x.fillRect(pad, y + 19, Math.max(2, (W - pad * 2) * bw / 100), 6);
+      x.fillStyle = FG;
+      x.font = '600 13px "Segoe UI", system-ui, sans-serif';
+      x.textAlign = 'right';
+      x.fillText(val, W - pad, y + 15);
+      x.textAlign = 'left';
+    });
+    return c;
+  }
+
+  // Tarjeta compuesta: mapa a la izquierda + ranking provincial a la derecha
+  function buildMapCard(svg) {
+    return new Promise((resolve, reject) => {
+      const xml = new XMLSerializer().serializeToString(svg);
+      const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)));
+      const img = new Image();
+      img.onload = () => {
+        const ratio = svg.viewBox.baseVal.height / svg.viewBox.baseVal.width;
+        const H = 800;
+        const MAP_SHARE = 0.35;
+        const W = Math.round(H / (MAP_SHARE * ratio));
+        const mapW = Math.round(W * MAP_SHARE);
+        const RANK_W = W - mapW;
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        const x = c.getContext('2d');
+        x.fillStyle = BG;
+        x.fillRect(0, 0, W, H);
+        x.drawImage(img, 0, 0, mapW, H);
+        const rank = rankingToCanvas(RANK_W, H);
+        x.drawImage(rank, mapW, 0);
+        resolve(c);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  // Insertar botones en cada tarjeta que tenga canvas o el mapa SVG
   document.querySelectorAll('.card').forEach(card => {
-    const canvas = card.querySelector('canvas');
+    let canvas = card.querySelector('canvas');
+    const svgMap = card.querySelector('#map-geo-svg');
     const h2 = card.querySelector('h2');
     const note = card.querySelector('.note');
-    if (!canvas || !h2) return;
+    if ((!canvas && !svgMap) || !h2) return;
 
     const btn = document.createElement('button');
     btn.className = 'share-btn';
@@ -159,7 +254,11 @@
       try {
         const title = h2.childNodes[0].textContent.trim();
         const subtitle = note ? note.textContent.trim() : '';
-        const card = await buildCard(title, subtitle, canvas);
+        let src;
+        if (canvas) src = canvas;
+        else if (svgMap && document.querySelector('#mapa-ranking .rank-row')) src = await buildMapCard(svgMap);
+        else if (svgMap) src = await svgToCanvas(svgMap, '#0d1522');
+        const card = await buildCard(title, subtitle, src);
         await shareCanvas(card, slugify(title));
       } finally {
         btn.disabled = false;

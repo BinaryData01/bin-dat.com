@@ -97,17 +97,37 @@
   }
 
   /* ============ KPIs ============ */
+  let sparkGid = 0;
+  function sparkSVG(serie, color) {
+    const pts = serie.filter(v => v != null && isFinite(v));
+    if (!pts.length) return '';
+    let min = Math.min.apply(null, pts), max = Math.max.apply(null, pts);
+    if (max === min) { max = min + 1; min = min - 1; }
+    const W = 100, H = 30, pad = 1.5;
+    const x = i => pts.length === 1 ? W / 2 : pad + (W - 2 * pad) * i / (pts.length - 1);
+    const y = v => H - pad - (H - 2 * pad) * (v - min) / (max - min);
+    const coords = pts.map((v, i) => `${x(i).toFixed(2)},${y(v).toFixed(2)}`).join(' ');
+    const id = 'sg' + (++sparkGid);
+    const poly = pts.length > 1
+      ? `<polygon points="0,${H} ${coords} ${W},${H}" fill="url(#${id})"/>` : '';
+    const line = pts.length > 1
+      ? `<polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>` : '';
+    const lx = x(pts.length - 1).toFixed(2), ly = y(pts[pts.length - 1]).toFixed(2);
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity=".32"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      </linearGradient></defs>${poly}${line}<circle cx="${lx}" cy="${ly}" r="2" fill="${color}"/>
+    </svg>`;
+  }
+
   function renderKPIs() {
-    const last = lastIn(keys(D.total));
-    if (!last) return;
-    const t = D.total[last];
     const lastP = lastIn(keys(D.privado));
+    if (!lastP) return;
     const p = D.privado[lastP];
     const mods = D.modalidades;
-    let mAct = mods[last] || mods[Object.keys(mods).filter(inRange).pop()];
-    if (!mAct) mAct = { publicos: null, monotributistas: null };
     const lastModKey = Object.keys(mods).filter(inRange).pop();
-    mAct = mods[lastModKey];
+    const mAct = mods[lastModKey] || { publicos: null, monotributistas: null, monotributo_social: null };
     const mPrev = mods[`${+lastModKey.slice(0, 4) - 1}${lastModKey.slice(4)}`];
     const lastRem = lastIn(keys(D.rem_media));
     const remM = D.rem_media[lastRem];
@@ -119,26 +139,36 @@
       return (a && b) ? Math.round(((a / b) - 1) * 1000) / 10 : null;
     };
     const viaPub = viaMod('publicos');
-    const viaMono = viaMod('monotributistas');
+    const monoSum = m => (m && m.monotributistas != null && m.monotributo_social != null)
+      ? m.monotributistas + m.monotributo_social : null;
+    const mActMono = mAct ? monoSum(mAct) : null;
+    const mPrevMono = mPrev ? monoSum(mPrev) : null;
+    const viaMono = (mActMono != null && mPrevMono != null)
+      ? Math.round(((mActMono / mPrevMono) - 1) * 1000) / 10 : null;
     const clsOf = v => v == null ? '' : (v >= 0 ? 'pos' : 'neg');
 
+    const privSer = keys(D.privado).filter(inRange).map(k => D.privado[k].o);
+    const pubSer = keys(mods).filter(inRange).map(k => mods[k].publicos);
+    const monoSer = keys(mods).filter(inRange).map(k => monoSum(mods[k]));
+    const remSer = keys(D.rem_media).filter(inRange).map(k => D.rem_media[k].v);
+
+    const AZUL = PALETTE[0];
     const cards = [
-      { label: `Trabajadores Registrados (${label(last)})`, value: fmtMill(t.o),
-        delta: `mensual ${fmtPct(t.vm)} · interanual ${fmtPct(t.va)}`, cls: clsOf(t.va) },
       { label: `Asalariados Privados (${label(lastP)})`, value: fmtMill(p.o),
-        delta: `interanual ${fmtPct(p.va)}`, cls: clsOf(p.va) },
+        delta: `interanual ${fmtPct(p.va)}`, cls: clsOf(p.va), spark: sparkSVG(privSer, AZUL) },
       { label: 'Asalariados Públicos', value: fmtMill(mAct && mAct.publicos),
-        delta: viaPub !== null ? `interanual ${fmtPct(viaPub)}` : 'sin dato interanual', cls: clsOf(viaPub) },
-      { label: 'Monotributistas', value: fmtMill(mAct && mAct.monotributistas),
-        delta: viaMono !== null ? `interanual ${fmtPct(viaMono)}` : 'trabajo independiente', cls: clsOf(viaMono) },
-      { label: `Remuneración Media Privada (${label(lastRem)})`, value: remM ? '$' + fmtMiles(Math.round(remM.v)) : '—',
-        delta: remM && remM.va != null ? `interanual ${fmtPct(remM.va)}` : '', cls: clsOf(remM && remM.va) },
+        delta: viaPub !== null ? `interanual ${fmtPct(viaPub)}` : 'sin dato interanual', cls: clsOf(viaPub), spark: sparkSVG(pubSer, AZUL) },
+      { label: 'Monotributistas', value: fmtMill(mActMono),
+        delta: viaMono !== null ? `interanual ${fmtPct(viaMono)}` : 'trabajo independiente', cls: clsOf(viaMono), spark: sparkSVG(monoSer, AZUL) },
+      { label: 'Remuneración Media Privada', value: remM ? '$' + fmtMiles(Math.round(remM.v)) : '—',
+        delta: remM && remM.va != null ? `interanual ${fmtPct(remM.va)}` : '', cls: clsOf(remM && remM.va), spark: sparkSVG(remSer, AZUL) },
     ];
     document.getElementById('kpis').innerHTML = cards.map(c => `
       <div class="kpi">
         <div class="label">${c.label}</div>
         <div class="value">${c.value}</div>
         <div class="delta ${c.cls}">${c.delta}</div>
+        <div class="kpi-spark">${c.spark}</div>
       </div>`).join('');
   }
 
@@ -169,13 +199,13 @@
         labels: varKeys.map(label),
         datasets: [{
           label: 'Var. mensual desest.', data: varKeys.map(k => D.total[k].vm),
-          backgroundColor: varKeys.map(k => D.total[k].vm >= 0 ? '#4f8dff' : '#f87171'),
+          backgroundColor: varKeys.map(k => (D.total[k].vm ?? 0) >= 0 ? '#34d399' : '#f87171'),
           borderRadius: 2
         }]
       },
       options: Object.assign(lineOpts(), {
         plugins: { tooltip: baseTooltip('%'), legend: { display: false } },
-        scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: { ticks: { callback: v => v + '%' }, grace: '15%' } }
+        scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: { ticks: { callback: v => v + '%' }, grace: '15%', min: -3 } }
       })
     });
 
@@ -185,12 +215,12 @@
         labels: varKeys.map(label),
         datasets: [
           { label: 'Total registrados', data: varKeys.map(k => D.total[k].va), borderColor: PALETTE[0], tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Asalariados privados', data: varKeys.map(k => D.privado[k] ? D.privado[k].va : null), borderColor: PALETTE[3], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Asalariados privados', data: varKeys.map(k => D.privado[k] ? D.privado[k].va : null), borderColor: PALETTE[1], tension: .25, pointRadius: 0, borderWidth: 2 },
         ]
       },
       options: Object.assign(lineOpts(), {
         plugins: { tooltip: baseTooltip('%') },
-        scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: { ticks: { callback: v => v + '%' }, grace: '15%' } }
+        scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: { ticks: { callback: v => v + '%' }, grace: '15%', min: -6, max: 6 } }
       })
     });
 
@@ -271,7 +301,7 @@
         labels: remKeys.map(label),
         datasets: [
           { label: 'Media', data: remKeys.map(k => D.rem_media[k].v), borderColor: PALETTE[0], tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].v : null), borderColor: PALETTE[2], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].v : null), borderColor: PALETTE[1], tension: .25, pointRadius: 0, borderWidth: 2 },
         ]
       },
       options: Object.assign(lineOpts(), {
@@ -289,7 +319,7 @@
         labels: remKeys.map(label),
         datasets: [
           { label: 'Media', data: remKeys.map(k => D.rem_media[k].va), borderColor: PALETTE[0], tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].va : null), borderColor: PALETTE[2], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].va : null), borderColor: PALETTE[1], tension: .25, pointRadius: 0, borderWidth: 2 },
         ]
       },
       options: Object.assign(lineOpts(), {
@@ -299,15 +329,15 @@
     });
   }
 
-  /* ============ Ramas / Provincias: snapshot al final del período ============ */
-  let ramasMode = 'n', provMode = 'n';
-  let chRamas = null, chProv = null;
+  /* ============ Ramas: snapshot al mes seleccionado ============ */
+  let ramasMode = 'n';
+  let chRamas = null;
+  const RAM_FECHAS = D.ramas_hist.fechas;
+  let ramasMes = null; // YYYY-MM; null = último del período
+  let ramasNoAnim = false;
 
-  function snapshotFrom(hist, fechas) {
-    // último mes disponible dentro del rango para la serie histórica
-    const f = fechas.filter(inRange);
-    const end = f[f.length - 1];
-    const endIdx = fechas.indexOf(end);
+  function snapshotAt(hist, fechas, k) {
+    const endIdx = fechas.indexOf(k);
     const antIdx = endIdx - 12;
     const rows = [];
     for (const n of hist.names) {
@@ -317,19 +347,29 @@
       rows.push({
         nombre: n, n_act: act, n_ant: ant,
         via: (act && ant) ? Math.round((act / ant - 1) * 1000) / 10 : null,
-        end
+        end: k
       });
     }
-    return { rows: rows.filter(r => r.n_act != null), end };
+    return { rows: rows.filter(r => r.n_act != null), end: k };
   }
 
   function renderRamas() {
     if (chRamas) { chRamas.destroy(); chRamas = null; }
-    const { rows: base, end } = snapshotFrom(D.ramas_hist, D.ramas_hist.fechas);
+    const end = ramasMes || lastIn(RAM_FECHAS);
+    const { rows: base } = snapshotAt(D.ramas_hist, RAM_FECHAS, end);
     const isVar = ramasMode === 'v';
     const rows = isVar ? base.slice().sort((a, b) => (b.via ?? -99) - (a.via ?? -99))
                        : base.slice().sort((a, b) => b.n_act - a.n_act);
     const prevK = `${+end.slice(0, 4) - 1}${end.slice(4)}`;
+    const opts = Object.assign(lineOpts(), {
+      indexAxis: 'y',
+      plugins: { tooltip: isVar ? baseTooltip('%') : tooltipMill },
+      scales: { x: Object.assign(
+        { ticks: { callback: v => isVar ? v + '%' : v } },
+        isVar ? { grace: '8%' } : { max: 1.4, title: { display: true, text: 'Millones de personas' } }
+      ) }
+    });
+    if (ramasNoAnim) opts.animation = false;
     chRamas = new Chart(document.getElementById('chRamas'), {
       type: 'bar',
       data: {
@@ -342,40 +382,11 @@
           { label: label(prevK), data: rows.map(r => toMill(r.n_ant)), backgroundColor: '#33507e', borderRadius: 3 },
         ]
       },
-      options: Object.assign(lineOpts(), {
-        indexAxis: 'y',
-        plugins: { tooltip: isVar ? baseTooltip('%') : tooltipMill },
-        scales: { x: Object.assign({ ticks: { callback: v => isVar ? v + '%' : v }, grace: '8%' }, isVar ? {} : { title: { display: true, text: 'Millones de personas' } }) }
-      })
+      options: opts
     });
+    ramasNoAnim = false;
     charts.push(chRamas);
-  }
-
-  function renderProv() {
-    if (chProv) { chProv.destroy(); chProv = null; }
-    const { rows: base, end } = snapshotFrom(D.prov_hist, D.prov_hist.fechas);
-    const isVar = provMode === 'v';
-    const rows = isVar ? base.slice().sort((a, b) => (b.via ?? -99) - (a.via ?? -99))
-                       : base.slice().sort((a, b) => b.n_act - a.n_act);
-    chProv = new Chart(document.getElementById('chProv'), {
-      type: 'bar',
-      data: {
-        labels: rows.map(r => r.nombre),
-        datasets: isVar ? [{
-          label: `Var. interanual (%) a ${label(end)}`, data: rows.map(r => r.via),
-          backgroundColor: rows.map(r => (r.via ?? 0) >= 0 ? '#34d399' : '#f87171'), borderRadius: 3
-        }] : [{
-          label: `${label(end)} (millones)`, data: rows.map(r => toMill(r.n_act)),
-          backgroundColor: PALETTE[1], borderRadius: 3
-        }]
-      },
-      options: Object.assign(lineOpts(), {
-        indexAxis: 'y',
-        plugins: { tooltip: isVar ? baseTooltip('%') : tooltipMill },
-        scales: { x: Object.assign({ ticks: { callback: v => isVar ? v + '%' : v }, grace: '8%' }, isVar ? {} : { title: { display: true, text: 'Millones de personas' } }) }
-      })
-    });
-    charts.push(chProv);
+    setNote('ramas', `Período: datos a ${label(end)} (variación interanual vs ${label(prevK)}).`);
   }
 
   /* ============ Series históricas por rama / provincia ============ */
@@ -511,10 +522,9 @@
     setNote('rem', rangoTxt(rKeys));
     setNote('remva', rangoTxt(rKeys));
     const hF = filtrar(D.ramas_hist.fechas);
-    const hEnd = hF[hF.length - 1];
+    const hEnd = ramasMes || hF[hF.length - 1];
     const hPrev = `${+hEnd.slice(0, 4) - 1}${hEnd.slice(4)}`;
     setNote('ramas', `Período: datos a ${label(hEnd)} (variación interanual vs ${label(hPrev)}).`);
-    setNote('prov', `Período: datos a ${label(hEnd)} (variación interanual vs ${label(hPrev)}).`);
     setNote('ramashist', rangoTxt(D.ramas_hist.fechas));
     setNote('provhist', rangoTxt(D.prov_hist.fechas));
     setNote('tabla', rangoTxt(tKeys));
@@ -524,23 +534,19 @@
   function renderAll() {
     charts.forEach(c => c.destroy());
     charts = [];
-    chRamas = chProv = null;
+    chRamas = null;
     renderKPIs();
     renderBalance();
     renderCharts();
     renderRamas();
-    renderProv();
     histChart('chRamasHist', D.ramas_hist, 6);
     histChart('chProvHist', D.prov_hist, 8);
     renderTable();
     updateNotes();
 
-    // notas dinámicas
-    const nota = document.getElementById('periodo-nota');
-    if (nota) {
-      nota.textContent = periodo.from
-        ? `Período: ${label(lastIn(keys(D.total)) && periodo.from)} a ${label(lastIn(keys(D.total)))} — ${periodo.nombre}`
-        : 'Serie completa disponible (ene-2009 a jun-2026 según variable).';
+    // hook para módulos externos (mapa provincial, etc.)
+    if (typeof window.SIPA_ON_PERIOD_CHANGE === 'function') {
+      try { window.SIPA_ON_PERIOD_CHANGE(periodo.from, periodo.to); } catch (e) { /* no-op */ }
     }
   }
 
@@ -554,8 +560,93 @@
   }
   toggle('btnRamasN', 'btnRamasV', () => { ramasMode = 'n'; renderRamas(); });
   toggle('btnRamasV', 'btnRamasN', () => { ramasMode = 'v'; renderRamas(); });
-  toggle('btnProvN', 'btnProvV', () => { provMode = 'n'; renderProv(); });
-  toggle('btnProvV', 'btnProvN', () => { provMode = 'v'; renderProv(); });
+
+  /* ============ Slider temporal de ramas ============ */
+  const ramSlider = document.getElementById('ramSlider');
+  const ramActual = document.getElementById('ramActual');
+  const ramPeriodo = document.getElementById('ramPeriodo');
+  const btnRamPlay = document.getElementById('btnRamPlay');
+  let ramasPlaying = false;
+  let ramasPlayTimer = null;
+  const RAM_IDX_MIN = RAM_FECHAS.indexOf('2010-01'); // variación interanual requiere 12 meses previos
+
+  function ramasRange() {
+    const { from, to } = periodo;
+    let lo = from ? RAM_FECHAS.findIndex(f => f >= from) : 0;
+    if (lo < 0) lo = 0;
+    if (lo < RAM_IDX_MIN) lo = RAM_IDX_MIN;
+    let hi = RAM_FECHAS.length - 1;
+    if (to) {
+      const exact = RAM_FECHAS.lastIndexOf(to);
+      if (exact >= 0) hi = exact;
+      else { const j = RAM_FECHAS.findIndex(f => f > to); if (j >= 0) hi = j - 1; }
+    }
+    return [lo, hi];
+  }
+
+  function ramasPeriodoDe(k) {
+    if (k >= '2023-12') return 'J. Milei';
+    if (k >= '2019-12') return 'A. Fernández';
+    if (k >= '2015-12') return 'M. Macri';
+    return 'CFK';
+  }
+
+  function ramasSetMes(m) {
+    ramasMes = m;
+    ramSlider.value = RAM_FECHAS.indexOf(ramasMes);
+    ramActual.textContent = label(ramasMes);
+    ramPeriodo.textContent = ramasPeriodoDe(ramasMes);
+    renderRamas();
+  }
+
+  function pauseRamas() {
+    if (ramasPlayTimer) { clearInterval(ramasPlayTimer); ramasPlayTimer = null; }
+    ramasPlaying = false;
+    btnRamPlay.textContent = '▶';
+    btnRamPlay.title = 'Reproducir';
+  }
+
+  function playRamas() {
+    const hi = +ramSlider.max;
+    let idx = ramasMes ? RAM_FECHAS.indexOf(ramasMes) : +ramSlider.value;
+    if (idx >= hi) idx = +ramSlider.min - 1;
+    pauseRamas();
+    ramasPlaying = true;
+    btnRamPlay.textContent = '⏸';
+    btnRamPlay.title = 'Pausar';
+    ramasPlayTimer = setInterval(() => {
+      idx++;
+      if (idx > hi) { ramasSetMes(RAM_FECHAS[hi]); pauseRamas(); return; }
+      ramasSetMes(RAM_FECHAS[idx]);
+    }, 250);
+  }
+
+  function applyRamasRango() {
+    const [lo, hi] = ramasRange();
+    let idx = ramasMes ? RAM_FECHAS.indexOf(ramasMes) : hi;
+    if (!ramasMes || idx < lo || idx > hi) { idx = hi; ramasMes = RAM_FECHAS[hi]; }
+    ramSlider.min = lo;
+    ramSlider.max = hi;
+    ramSlider.value = idx;
+    ramActual.textContent = label(ramasMes);
+    ramPeriodo.textContent = ramasPeriodoDe(ramasMes);
+    pauseRamas();
+  }
+
+  ramSlider.addEventListener('input', () => { ramasNoAnim = true; pauseRamas(); ramasSetMes(RAM_FECHAS[+ramSlider.value]); });
+  document.getElementById('btnRamAnt').addEventListener('click', () => {
+    pauseRamas();
+    const base = ramasMes || lastIn(RAM_FECHAS);
+    const idx = RAM_FECHAS.indexOf(base);
+    ramasSetMes(RAM_FECHAS[Math.max(+ramSlider.min, idx - 1)]);
+  });
+  document.getElementById('btnRamSig').addEventListener('click', () => {
+    pauseRamas();
+    const base = ramasMes || lastIn(RAM_FECHAS);
+    const idx = RAM_FECHAS.indexOf(base);
+    ramasSetMes(RAM_FECHAS[Math.min(+ramSlider.max, idx + 1)]);
+  });
+  btnRamPlay.addEventListener('click', () => { ramasPlaying ? pauseRamas() : playRamas(); });
 
   /* ============ Selector de período ============ */
   document.querySelectorAll('#periodo-bar [data-periodo]').forEach(btn => {
@@ -563,9 +654,11 @@
       document.querySelectorAll('#periodo-bar .chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       periodo = PERIODOS[btn.dataset.periodo];
+      applyRamasRango();
       renderAll();
     });
   });
 
+  applyRamasRango();
   renderAll();
 })();
