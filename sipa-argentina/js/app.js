@@ -150,7 +150,7 @@
         try {
           const lab = c.data.labels && c.data.labels[idx];
           return String(cb({ chart: c, dataset: ds, datasetIndex: dsIdx, dataIndex: idx,
-                             label: lab, raw: v, parsed: isArc ? v : { x: lab, y: v } }));
+                             label: lab, raw: v, parsed: isArc ? v : (c.options.indexAxis === 'y' ? { x: v, y: lab } : { x: lab, y: v }) }));
         } catch (e) { /* fallthrough */ }
       }
       return ds.label && ds.label + ': ' + v.toLocaleString('es-AR');
