@@ -165,6 +165,31 @@ main.wrap { padding-top: 1.6rem; padding-bottom: 3rem; }
   .lbl-largo { display: none; }
   .lbl-corto { display: inline; }
   .periodo-bar .chip small { display: none; }
+}
+
+.chart-fixed-tip {
+  position: absolute;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .4rem .65rem;
+  font-size: .78rem;
+  color: var(--ink);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+  opacity: 0;
+  transition: opacity .08s;
+  pointer-events: none;
+  z-index: 5;
+  max-width: 300px;
+  line-height: 1.35;
+}
+.cft-t { color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+.cft-row { display: flex; align-items: center; gap: 5px; }
+.cft-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+.cft-val { font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.cft-lbl { flex: 1; min-width: 0; }
+
+@media (max-width: 600px) {
   #btnFecPlay, #btnRamPlay, #fechSlider, #ramSlider { display: none; }
   .mapa-izq { display: none; }
   #card-mapa #btnFecAnt, #card-mapa #fechaActual, #card-mapa #btnFecSig, #card-mapa #fecPeriodo { display: none; }

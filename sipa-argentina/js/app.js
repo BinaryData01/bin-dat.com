@@ -46,6 +46,135 @@
     scales: { x: { ticks: { maxTicksLimit: 14, maxRotation: 0 } }, y: {} }
   }, extra || {});
 
+  // Tooltip fijo en el vértice superior izquierdo del área del gráfico,
+// mostrando únicamente el punto seleccionado.
+  const fixedBinds = new WeakMap();
+  // Índice (categoría) bajo el cursor; síncrono y sin depender del hover de Chart.js
+  const pickIndex = (c, e) => {
+    const horizontal = c.options && c.options.indexAxis === 'y';
+    if (c.config && c.config.type === 'doughnut') return pickArcIndex(c, e);
+    const idxS = horizontal ? c.scales.y : c.scales.x;
+    if (!idxS) return null;
+    let idx = Math.round(idxS.getValueForPixel(horizontal ? e.offsetY : e.offsetX));
+    const n = (c.data.labels || []).length;
+    if (!n) return null;
+    if (idx < 0) idx = 0;
+    if (idx >= n) idx = n - 1;
+    return idx;
+  };
+  const pickArcIndex = (c, e) => {
+    const arcs = c.getDatasetMeta(0).data;
+    const cent = arcs.filter(a => a && isFinite(a.x) && isFinite(a.y))[0];
+    if (!cent) return null;
+    let ang = Math.atan2(e.offsetY - cent.y, e.offsetX - cent.x);
+    if (ang < 0) ang += 2 * Math.PI;
+    const norm = a => (a % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    for (let i = 0; i < arcs.length; i++) {
+      const a = arcs[i];
+      if (a == null || !isFinite(a.x)) continue;
+      let s = norm(a.startAngle), en = norm(a.endAngle);
+      if (en < s) en += 2 * Math.PI;
+      if (ang >= s && ang <= en) return i;
+    }
+    return null;
+  };
+  function bindFixedTip(chart, pos) {
+    const canvas = chart.canvas;
+    const prev = fixedBinds.get(canvas);
+    if (prev) { prev.chart = chart; prev.pos = pos || 'tl'; if (prev.div) prev.div.style.opacity = 0; return; }
+    const state = { div: null, chart, pos: pos || 'tl' };
+    fixedBinds.set(canvas, state);
+    const ensure = () => {
+      if (state.div) return state.div;
+      const wrap = state.chart.canvas.parentElement;
+      let d = wrap.querySelector('.chart-fixed-tip');
+      if (!d) {
+        d = document.createElement('div');
+        d.className = 'chart-fixed-tip';
+        if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+        wrap.appendChild(d);
+      }
+      state.div = d;
+      return d;
+    };
+    const update = e => {
+      const c = state.chart;
+      if (!c.chartArea || !c.scales) { if (state.div) state.div.style.opacity = 0; return; }
+      const idx = pickIndex(c, e);
+      if (idx == null) { if (state.div) state.div.style.opacity = 0; return; }
+      const isArc = (c.config && c.config.type === 'doughnut');
+      const rows = [];
+      let cab;
+      if (isArc) {
+        const ds = c.data.datasets[0];
+        const lab = c.data.labels && c.data.labels[idx];
+        const rawV = ds.data && ds.data[idx];
+        cab = lab == null ? '' : lab;
+        rows.push({ col: ds.borderColor || '#4f8dff', txt: fmtVal(c, ds, 0, idx, rawV, true) });
+      } else {
+        cab = (c.data.labels && c.data.labels[idx]) == null ? '' : c.data.labels[idx];
+        for (let i = 0; i < c.data.datasets.length; i++) {
+          if (!c.isDatasetVisible(i)) continue;
+          const ds = c.data.datasets[i];
+          const v = ds.data && ds.data[idx];
+          if (v == null || !isFinite(v)) continue;
+          rows.push({ col: ds.borderColor || '#4f8dff', txt: fmtVal(c, ds, i, idx, v, false) });
+        }
+      }
+      if (!rows.length) { if (state.div) state.div.style.opacity = 0; return; }
+      const div = ensure();
+      const ca = c.chartArea;
+      div.innerHTML =
+        `<div class="cft-t">${cab}</div>` +
+        rows.map(r =>
+          `<div class="cft-row"><span class="cft-dot" style="background:${r.col}"></span><span class="cft-lbl">${r.txt}</span></div>`
+        ).join('');
+      const w = div.offsetWidth, h = div.offsetHeight;
+      const m = 8, p = state.pos;
+      if (p === 'bl') {
+        div.style.left = Math.max(0, ca.left + m) + 'px';
+        div.style.top = Math.max(ca.top + m, ca.bottom - h - m) + 'px';
+      } else if (p === 'br') {
+        div.style.left = Math.max(ca.left + m, ca.right - w - m) + 'px';
+        div.style.top = Math.max(ca.top + m, ca.bottom - h - m) + 'px';
+      } else {
+        div.style.left = Math.max(0, ca.left + m) + 'px';
+        div.style.top = Math.max(0, ca.top + m) + 'px';
+      }
+      div.style.opacity = 1;
+    };
+    const fmtVal = (c, ds, dsIdx, idx, v, isArc) => {
+      const cb = c.options.plugins.tooltip &&
+        c.options.plugins.tooltip.callbacks && c.options.plugins.tooltip.callbacks.label;
+      if (typeof cb === 'function') {
+        try {
+          const lab = c.data.labels && c.data.labels[idx];
+          return String(cb({ chart: c, dataset: ds, datasetIndex: dsIdx, dataIndex: idx,
+                             label: lab, raw: v, parsed: isArc ? v : { x: lab, y: v } }));
+        } catch (e) { /* fallthrough */ }
+      }
+      return ds.label && ds.label + ': ' + v.toLocaleString('es-AR');
+    };
+    const hide = () => { if (state.div) state.div.style.opacity = 0; };
+    ['pointermove', 'mousemove'].forEach(t => canvas.addEventListener(t, update));
+    ['pointerleave', 'mouseleave'].forEach(t => canvas.addEventListener(t, hide));
+  }
+
+  const withFixedTip = opts => {
+    opts.interaction = { mode: 'nearest', intersect: false };
+    opts.plugins = opts.plugins || {};
+    opts.plugins.tooltip = Object.assign(
+      { mode: 'nearest', intersect: false, enabled: false, external: () => {} },
+      opts.plugins.tooltip || {}
+    );
+    return opts;
+  };
+  const hoverPunto = color => ({
+    pointRadius: 0, pointHitRadius: 20,
+    pointHoverRadius: 3.5, pointHoverBorderWidth: 2,
+    pointHoverBackgroundColor: '#ffffff', pointHoverBorderColor: color
+  });
+
   const series = (obj, field) => Object.keys(obj).map(k => obj[k][field]);
   const keys = obj => Object.keys(obj);
 
@@ -181,14 +310,14 @@
       data: {
         labels: tKeys.map(label),
         datasets: [
-          { label: 'Serie original', data: toMillArr(tKeys.map(k => D.total[k].o)), borderColor: PALETTE[0], backgroundColor: 'rgba(79,141,255,.12)', fill: true, tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Desestacionalizada', data: toMillArr(tKeys.map(k => D.total[k].d)), borderColor: PALETTE[1], borderDash: [5, 4], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Serie original', data: toMillArr(tKeys.map(k => D.total[k].o)), borderColor: PALETTE[0], backgroundColor: 'rgba(79,141,255,.12)', fill: true, tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[0]) },
+          { label: 'Desestacionalizada', data: toMillArr(tKeys.map(k => D.total[k].d)), borderColor: PALETTE[1], borderDash: [5, 4], tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[1]) },
         ]
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: tooltipMill },
         scales: { x: { ticks: { maxTicksLimit: 14, maxRotation: 0 } }, y: Object.assign({ grace: '5%' }, AXIS_MILL) }
-      })
+      }))
     });
 
     // Variaciones: en modo histórico solo desde ene-2021 para legibilidad
@@ -203,10 +332,10 @@
           borderRadius: 2
         }]
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: baseTooltip('%'), legend: { display: false } },
         scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: { ticks: { callback: v => v + '%' }, grace: '15%', min: -3 } }
-      })
+      }))
     });
 
     mk('chVarA', {
@@ -214,14 +343,14 @@
       data: {
         labels: varKeys.map(label),
         datasets: [
-          { label: 'Total registrados', data: varKeys.map(k => D.total[k].va), borderColor: PALETTE[0], tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Asalariados privados', data: varKeys.map(k => D.privado[k] ? D.privado[k].va : null), borderColor: PALETTE[1], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Total registrados', data: varKeys.map(k => D.total[k].va), borderColor: PALETTE[0], tension: .25, pointRadius: 0, borderWidth: 2, ...hoverPunto(PALETTE[0]) },
+          { label: 'Asalariados privados', data: varKeys.map(k => D.privado[k] ? D.privado[k].va : null), borderColor: PALETTE[1], tension: .25, pointRadius: 0, borderWidth: 2, ...hoverPunto(PALETTE[1]) },
         ]
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: baseTooltip('%') },
         scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: { ticks: { callback: v => v + '%' }, grace: '15%', min: -6, max: 6 } }
-      })
+      }))
     });
 
     const pKeys = filtrar(keys(D.privado));
@@ -230,14 +359,14 @@
       data: {
         labels: pKeys.map(label),
         datasets: [
-          { label: 'Serie original', data: toMillArr(pKeys.map(k => D.privado[k].o)), borderColor: PALETTE[4], backgroundColor: 'rgba(248,113,113,.08)', fill: true, tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Desestacionalizada', data: toMillArr(pKeys.map(k => D.privado[k].d)), borderColor: PALETTE[3], borderDash: [5, 4], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Serie original', data: toMillArr(pKeys.map(k => D.privado[k].o)), borderColor: PALETTE[4], backgroundColor: 'rgba(248,113,113,.08)', fill: true, tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[4]) },
+          { label: 'Desestacionalizada', data: toMillArr(pKeys.map(k => D.privado[k].d)), borderColor: PALETTE[3], borderDash: [5, 4], tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[3]) },
         ]
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: tooltipMill },
         scales: { x: { ticks: { maxTicksLimit: 14, maxRotation: 0 } }, y: Object.assign({ grace: '5%' }, AXIS_MILL) }
-      })
+      }))
     });
 
     const modKeys = filtrar(keys(D.modalidades));
@@ -247,13 +376,13 @@
         labels: modKeys.map(label),
         datasets: MOD_DEFS.map(([slug, name, color]) => ({
           label: name, data: toMillArr(modKeys.map(k => D.modalidades[k][slug])),
-          borderColor: color, tension: .25, pointRadius: 0, borderWidth: 2
+          borderColor: color, tension: .25, pointRadius: 0, borderWidth: 2, ...hoverPunto(color)
         }))
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: tooltipMill },
         scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: Object.assign({ grace: '5%' }, AXIS_MILL) }
-      })
+      }))
     });
 
     mk('chIndep', {
@@ -262,13 +391,13 @@
         labels: modKeys.map(label),
         datasets: MOD_DEFS.slice(3).map(([slug, name, color]) => ({
           label: name, data: toMillArr(modKeys.map(k => D.modalidades[k][slug])),
-          borderColor: color, tension: .25, pointRadius: 0, borderWidth: 2
+          borderColor: color, tension: .25, pointRadius: 0, borderWidth: 2, ...hoverPunto(color)
         }))
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: tooltipMill },
         scales: { x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } }, y: Object.assign({ grace: '8%' }, AXIS_MILL) }
-      })
+      }))
     });
 
     // Composicion al final del período filtrado
@@ -300,17 +429,17 @@
       data: {
         labels: remKeys.map(label),
         datasets: [
-          { label: 'Media', data: remKeys.map(k => D.rem_media[k].v), borderColor: PALETTE[0], tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].v : null), borderColor: PALETTE[1], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Media', data: remKeys.map(k => D.rem_media[k].v), borderColor: PALETTE[0], tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[0]) },
+          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].v : null), borderColor: PALETTE[1], tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[1]) },
         ]
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: $${c.parsed.y == null ? '—' : c.parsed.y.toLocaleString('es-AR')}` } } },
         scales: {
           x: { ticks: { maxTicksLimit: 14, maxRotation: 0 } },
           y: { type: 'logarithmic', ticks: { callback: v => '$' + Number(v).toLocaleString('es-AR') } }
         }
-      })
+      }))
     });
 
     mk('chRemVa', {
@@ -318,14 +447,20 @@
       data: {
         labels: remKeys.map(label),
         datasets: [
-          { label: 'Media', data: remKeys.map(k => D.rem_media[k].va), borderColor: PALETTE[0], tension: .25, pointRadius: 0, borderWidth: 2 },
-          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].va : null), borderColor: PALETTE[1], tension: .25, pointRadius: 0, borderWidth: 2 },
+          { label: 'Media', data: remKeys.map(k => D.rem_media[k].va), borderColor: PALETTE[0], tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[0]) },
+          { label: 'Mediana', data: remKeys.map(k => D.rem_mediana[k] ? D.rem_mediana[k].va : null), borderColor: PALETTE[1], tension: .25, borderWidth: 2, ...hoverPunto(PALETTE[1]) },
         ]
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: baseTooltip('%') },
         scales: { x: { ticks: { maxTicksLimit: 14, maxRotation: 0 } }, y: { ticks: { callback: v => v + '%' } } }
-      })
+      }))
+    });
+
+    [['chTotal', 'tl'], ['chPriv', 'tl'], ['chRem', 'tl'], ['chRemVa', 'tl'],
+     ['chMod', 'tl'], ['chIndep', 'tl'], ['chVarM', 'bl'], ['chVarA', 'bl']].forEach(([id, pos]) => {
+      const c = Chart.getChart(id);
+      if (c) bindFixedTip(c, pos);
     });
   }
 
@@ -361,14 +496,14 @@
     const rows = isVar ? base.slice().sort((a, b) => (b.via ?? -99) - (a.via ?? -99))
                        : base.slice().sort((a, b) => b.n_act - a.n_act);
     const prevK = `${+end.slice(0, 4) - 1}${end.slice(4)}`;
-    const opts = Object.assign(lineOpts(), {
+    const opts = withFixedTip(Object.assign(lineOpts(), {
       indexAxis: 'y',
       plugins: { tooltip: isVar ? baseTooltip('%') : tooltipMill },
       scales: { x: Object.assign(
         { ticks: { callback: v => isVar ? v + '%' : v } },
         isVar ? { grace: '8%' } : { max: 1.4, title: { display: true, text: 'Millones de personas' } }
       ) }
-    });
+    }));
     if (ramasNoAnim) opts.animation = false;
     chRamas = new Chart(document.getElementById('chRamas'), {
       type: 'bar',
@@ -386,6 +521,7 @@
     });
     ramasNoAnim = false;
     charts.push(chRamas);
+    bindFixedTip(chRamas, 'br');
     setNote('ramas', `Período: datos a ${label(end)} (variación interanual vs ${label(prevK)}).`);
   }
 
@@ -404,7 +540,7 @@
       })
       .sort((a, b) => b.lastV - a.lastV);
     const short = n => n.length > 38 ? n.slice(0, 36) + '…' : n;
-    mk(canvasId, {
+    const ch = mk(canvasId, {
       type: 'line',
       data: {
         labels: labelsF.map(label),
@@ -413,14 +549,16 @@
           data: toMillArr(r.vals),
           borderColor: PALETTE[i % PALETTE.length],
           tension: .25, pointRadius: 0, borderWidth: 1.8,
-          hidden: i >= topN
+          hidden: i >= topN,
+          ...hoverPunto(PALETTE[i % PALETTE.length])
         }))
       },
-      options: Object.assign(lineOpts(), {
+      options: withFixedTip(Object.assign(lineOpts(), {
         plugins: { tooltip: tooltipMill, legend: { labels: { boxWidth: 12 } } },
         scales: { x: { ticks: { maxTicksLimit: 14, maxRotation: 0 } }, y: Object.assign({ grace: '5%' }, AXIS_MILL) }
-      })
+      }))
     });
+    if (ch) bindFixedTip(ch);
   }
 
   /* ============ Tabla ============ */
