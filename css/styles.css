@@ -19,19 +19,20 @@ body {
   position: relative;
 }
 
-/* sutil textura de dígitos binarios de fondo, referencia directa al nombre de marca */
-.bits {
+svg {
   position: fixed;
-  inset: 0;
-  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0;
+  z-index: -1;
   pointer-events: none;
-  color: #0d1c2e;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.9;
-  letter-spacing: 0.35em;
-  white-space: pre;
-  user-select: none;
+}
+
+defs path {
+  stroke: rgb(128, 126, 126);
+  stroke-width: 2px;
 }
 
 main {
@@ -41,6 +42,7 @@ main {
   align-items: center;
   gap: 2.6rem;
   padding: 2rem;
+  z-index: 1;
 }
 
 .logo {
