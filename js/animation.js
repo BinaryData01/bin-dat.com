@@ -1,7 +1,7 @@
 console.clear();
 
 const svgEl = document.querySelector('svg');
-const paths = Array.from(document.querySelectorAll('path'));
+const allPaths = Array.from(document.querySelectorAll('path'));
 const defs = document.querySelector('defs');
 const xmlns = "http://www.w3.org/2000/svg";
 
@@ -12,10 +12,17 @@ if (prefersReducedMotion) {
   // No animamos nada: el usuario pidió reducir el movimiento
   svgEl.style.opacity = 1;
 } else {
-  // En mobile animamos la mitad de las líneas (1 de cada 2) y bajamos el
-  // framerate del ticker de GSAP. El resto de las líneas queda visible pero
-  // estática (conserva su stroke-dasharray original del SVG).
-  const targets = isMobile ? paths.filter((_, i) => i % 2 === 0) : paths;
+  // En mobile, styles.css ya oculta 1 de cada 2 líneas con display:none
+  // (svg > path:nth-of-type(2n)) antes de este script correr, así el
+  // navegador nunca llega a layoutearlas/pintarlas. Acá las sacamos del DOM
+  // directamente en vez de dejarlas ocultas pero presentes.
+  const targets = isMobile
+    ? allPaths.filter((p, i) => {
+        const keep = i % 2 === 0;
+        if (!keep) p.remove();
+        return keep;
+      })
+    : allPaths;
 
   if (isMobile) gsap.ticker.fps(30);
 
@@ -29,22 +36,21 @@ if (prefersReducedMotion) {
   // de la lentitud en navegadores de celulares.
   targets.forEach((p, idx) => {
     const len = lengths[idx];
-    const i = paths.indexOf(p);
 
     const clone = p.cloneNode();
     clone.removeAttribute('stroke-dasharray');
 
     const mask = document.createElementNS(xmlns, 'mask');
-    mask.setAttribute('id', `id-${i}`);
+    mask.setAttribute('id', `id-${idx}`);
     mask.appendChild(clone);
     defs.appendChild(mask);
-    p.setAttribute('mask', `url(#id-${i})`);
+    p.setAttribute('mask', `url(#id-${idx})`);
 
     gsap.set(clone, { strokeDasharray: len, strokeDashoffset: len });
 
     gsap.to(clone, {
       duration: 10,
-      delay: i * 0.1,
+      delay: idx * 0.1,
       repeat: -1,
       strokeDashoffset: len * 3,
       ease: 'power1.inOut'
